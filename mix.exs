@@ -10,6 +10,7 @@ defmodule Mithril.PubSub.MixProject do
       deps_path: "deps",
       lockfile: "mix.lock",
       elixir: "~> 1.5",
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -21,6 +22,9 @@ defmodule Mithril.PubSub.MixProject do
       extra_applications: [:logger]
     ]
   end
+
+  def elixirc_paths(:test), do: ["lib", "test/support"]
+  def elixirc_paths(_), do: ["lib"]
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
