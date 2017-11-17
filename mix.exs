@@ -12,7 +12,8 @@ defmodule Mithril.PubSub.MixProject do
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      docs: docs()
     ]
   end
 
@@ -26,10 +27,19 @@ defmodule Mithril.PubSub.MixProject do
   def elixirc_paths(:test), do: ["lib", "test/support"]
   def elixirc_paths(_), do: ["lib"]
 
+  defp docs do
+    [
+      main: "README",
+      extras: ["README.md"],
+      assets: "assets"
+    ]
+  end
+
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix_pubsub, "~> 1.0.0"}
+      {:phoenix_pubsub, "~> 1.0.0"},
+      {:ex_doc, ">= 0.0.0", only: [:dev, :test]}
     ]
   end
 end

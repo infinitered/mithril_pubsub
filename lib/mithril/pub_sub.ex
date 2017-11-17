@@ -2,7 +2,7 @@ defmodule Mithril.PubSub do
   @moduledoc """
   A generic PubSub server, fully compatible with `Phoenix.PubSub`.
 
-  ## Defining Your PubSub Module
+  ## Definition
 
   Define a `PubSub` module in your project:
 
@@ -12,7 +12,8 @@ defmodule Mithril.PubSub do
 
   ## Configuration
 
-  You must configure your adapter with its settings.
+  You must configure your adapter with its settings. You may use any
+  adapter supported by `Phoenix.PubSub`.
 
       config :my_app, MyApp.PubSub,
         adapter: Phoenix.PubSub.PG2,
@@ -27,7 +28,8 @@ defmodule Mithril.PubSub do
 
   ## Basic Usage
 
-  Then subscribe and broadcast on topics:
+  You can then use your new PubSub module subscribe and broadcast on 
+  topics:
 
       # From a process that wants to receive messages
       MyApp.PubSub.subscribe("topic")
@@ -51,7 +53,7 @@ defmodule Mithril.PubSub do
 
   ### Phoenix Channels 
 
-  `Mithril.PubSub` expects events on topics to be ordinary Erlang terms.
+  `Mithril.PubSub` expects events on topics to be **ordinary Erlang terms**.
   This allows your business logic to use generic terms to describe events
   and avoids any dependency on a specific library.
 

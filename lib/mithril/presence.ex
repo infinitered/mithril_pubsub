@@ -1,6 +1,8 @@
 defmodule Mithril.Presence do
   @moduledoc """
-  Provides Presence tracking to processes and channels.
+  Provides Presence tracking to processes and channels. **It is
+  a slight fork of `Phoenix.Presence`, removing Phoenix-specific
+  data structures.**
 
   This behaviour provides presence features such as fetching
   presences for a given topic, as well as handling diffs of
@@ -21,8 +23,8 @@ defmodule Mithril.Presence do
       end
 
   The `:pubsub_server` must point to an existing pubsub server
-  running in your application, which is included by default as
-  `MyApp.PubSub` for new applications.
+  running in your application. Ideally, a pubsub server defined 
+  with `Mithril.PubSub`.
 
   Next, add the new supervisor to your supervision tree in `lib/my_app.ex`:
 
@@ -39,13 +41,13 @@ defmodule Mithril.Presence do
 
         def join("some:topic", _params, socket) do
           send(self(), :after_join)
-          {:ok, assign(socket, :user_id, ...)}
+          {:ok, socket}
         end
 
         def handle_info(:after_join, socket) do
-          push socket, "presence_state", Presence.list(socket.topic)
-          {:ok, _} = Presence.track(socket.channel_pid, socket.topic, socket.assigns.user_id, %{
-            online_at: inspect(System.system_time(:seconds))
+          push socket, "presence_state", Presence.list(socket)
+          {:ok, _} = Presence.track(socket, socket.assigns.user_id, %{
+            online_at: System.system_time(:seconds)
           })
           {:noreply, socket}
         end
@@ -111,15 +113,25 @@ defmodule Mithril.Presence do
   original presence data.
   """
 
+  alias Mithril.PubSub.Subscriber
+
   @type presences :: %{String.t() => %{metas: [map()]}}
   @type presence :: %{key: String.t(), meta: map()}
   @type topic :: String.t()
 
   @callback start_link(Keyword.t()) :: {:ok, pid()} | {:error, reason :: term()} :: :ignore
   @callback init(Keyword.t()) :: {:ok, state :: term} | {:error, reason :: term}
+  @callback track(subscriber :: Subscriber.t(), key :: String.t(), meta :: map()) ::
+              {:ok, binary()} | {:error, reason :: term()}
   @callback track(pid, topic, key :: String.t(), meta :: map()) ::
               {:ok, binary()} | {:error, reason :: term()}
+  @callback untrack(subscriber :: Subscriber.t(), key :: String.t()) :: :ok
   @callback untrack(pid, topic, key :: String.t()) :: :ok
+  @callback update(
+              subscriber :: Subscriber.t(),
+              key :: String.t(),
+              meta :: map() | (map() -> map())
+            ) :: {:ok, binary()} | {:error, reason :: term()}
   @callback update(pid, topic, key :: String.t(), meta :: map() | (map() -> map())) ::
               {:ok, binary()} | {:error, reason :: term()}
   @callback fetch(topic, presences) :: presences
