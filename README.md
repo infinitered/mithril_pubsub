@@ -59,6 +59,95 @@ def deps do
 end
 ```
 
+## Usage
+
+Define a `PubSub` module in your logic application:
+
+```elixir
+defmodule MyApp.PubSub do
+  use Mithril.PubSub, otp_app: :my_app
+end
+```
+
+Configure that `PubSub` module to use an adapter:
+
+```elixir
+# config/config.exs
+config :my_app, MyApp.PubSub,
+  adapter: Phoenix.PubSub.PG2,
+  pool_size: 5
+```
+
+If using Phoenix, replace the `:pubsub` option on your Endpoint configuration
+with your new `PubSub` module:
+
+```elixir
+config :my_app_web, MyAppWeb.Endpoint,
+  pubsub: [name: MyApp.PubSub]
+```
+
+Update your `lib/my_app_web.ex` or `apps/my_app_web/lib/my_app_web.ex` file to
+pull in functions from your new `PubSub` module instead of the defaults from
+`Phoenix.Channel`:
+
+```elixir
+def channel do
+  quote do
+    use Phoenix.Channel
+
+    import Phoenix.Channel,
+      except: [
+        broadcast: 3,
+        broadcast!: 3,
+        broadcast_from: 3,
+        broadcast_from!: 3
+      ]
+
+    import MyApp.PubSub,
+      only: [
+        broadcast: 2
+        broadcast!: 2
+        broadcast_from: 2,
+        broadcast_from!: 2
+      ]
+  end
+end
+```
+
+Then, broadcast regular Elixir tuple messages over your PubSub within your channel:
+
+```elixir
+defmodule MyAppWeb.RoomChannel do
+  use MyAppWeb, :channel
+
+  alias MyApp.Presence
+
+  def join("room:lobby", payload, socket) do
+    {:ok, socket}
+  end
+
+  def handle_in("message", message, socket) do
+    # Broadcasts the event as a simple Erlang term, instead of a
+    # custom Phoenix one. This allows listeners in the business
+    # logic app to easily subscribe to them.
+    broadcast!(socket, {:message, message})
+    {:noreply, socket}
+  end
+
+  # Channels will receive messages for their topic from the PubSub
+  # server as regular Erlang process messages.
+  #
+  # It's up to each channel to handle these messages and forward
+  # them on to the websocket using `Phoenix.Channel.push/3`.
+  def handle_info({:message, message}, socket) do
+    push(socket, "message", message)
+    {:noreply, socket}
+  end
+end
+```
+
+## Documentation
+
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc).
 
 [pp]: https://hexdocs.pm/phoenix_pubsub
