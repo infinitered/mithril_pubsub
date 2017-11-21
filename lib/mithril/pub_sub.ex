@@ -53,13 +53,13 @@ defmodule Mithril.PubSub do
 
   ### Phoenix Channels 
 
-  `Mithril.PubSub` expects events on topics to be **ordinary Erlang terms**.
-  This allows your business logic to use generic terms to describe events
+  `Mithril.PubSub` expects messages on topics to be **ordinary Erlang terms**.
+  This allows your business logic to use generic terms to describe messages
   and avoids any dependency on a specific library.
 
   However, while Phoenix Channels do broadcast over the the Endpoint's
   configured PubSub server, they do so with specialized, Phoenix-specific 
-  events like `Phoenix.Socket.Message` and `Phoenix.Socket.Broadcast`.
+  messages like `Phoenix.Socket.Message` and `Phoenix.Socket.Broadcast`.
 
   You should therefore update your `channel` definition in 
   `lib/my_app_web.ex` to exclude the `Phoenix.Channel` functions and use
@@ -88,7 +88,7 @@ defmodule Mithril.PubSub do
       end
 
   You can then use the `PubSub` functions instead of the Phoenix ones to
-  publish events on topics. Here's an example:
+  publish messages on topics. Here's an example:
 
       defmodule MyAppWeb.RoomChannel do
         use MyAppWeb, :channel
@@ -100,7 +100,7 @@ defmodule Mithril.PubSub do
         end
 
         def handle_in("message", message, socket) do
-          # Broadcasts the event as a simple Erlang term, instead of a
+          # Broadcasts the message as a simple Erlang term, instead of a
           # custom Phoenix one. This allows listeners in the business
           # logic app to easily subscribe to them.
           broadcast!(socket, {:message, message})
@@ -119,7 +119,7 @@ defmodule Mithril.PubSub do
       end
 
   This structure allows your logic application in `apps/my_app` or 
-  `lib/my_app` to broadcast events on topics with zero dependencies on
+  `lib/my_app` to broadcast messages on topics with zero dependencies on
   Phoenix.
 
       # Phoenix is configured to use `MyApp.PubSub` as its PubSub,
@@ -152,7 +152,7 @@ defmodule Mithril.PubSub do
       @adapter_args Keyword.drop(@config, [:adapter])
 
       @type topic :: String.t()
-      @type event :: {atom, term}
+      @type message :: {atom, term}
 
       @doc """
       Starts the PubSub server.
@@ -178,85 +178,155 @@ defmodule Mithril.PubSub do
       end
 
       @doc """
-      Broadcasts an event on a given topic, to all subscribers.
+      Broadcasts a message on a given topic, to all subscribers.
       """
-      @spec broadcast(topic, event) :: :ok | {:error, term}
-      def broadcast(topic, event) do
-        PubSub.broadcast(__MODULE__, topic, event)
+      @spec broadcast(topic, message) :: :ok | {:error, term}
+      def broadcast(topic, message) do
+        PubSub.broadcast(__MODULE__, topic, message)
       end
 
       @doc """
-      Broadcasts an event on the topic extracted from `subscriber`.
+      Broadcasts a message on the topic extracted from `subscriber`.
 
       Subscriber must implement the `Mithril.PubSub.Subscriber` protocol.
       """
-      @spec broadcast(Subscriber.t(), event) :: :ok | {:error, term}
-      def broadcast(subscriber, event) when is_map(subscriber) do
-        PubSub.broadcast(__MODULE__, subscriber, event)
+      @spec broadcast(Subscriber.t(), message) :: :ok | {:error, term}
+      def broadcast(subscriber, message) when is_map(subscriber) do
+        PubSub.broadcast(__MODULE__, subscriber, message)
       end
 
       @doc """
-      Broadcasts an event on a given topic.
+      Broadcasts a message on a given topic.
 
       Raises `Phoenix.PubSub.BroadcastError` if broadcast fails.
       """
-      @spec broadcast!(topic, event) :: :ok | no_return
-      def broadcast!(topic, event) do
-        PubSub.broadcast!(__MODULE__, topic, event)
+      @spec broadcast!(topic, message) :: :ok | no_return
+      def broadcast!(topic, message) do
+        PubSub.broadcast!(__MODULE__, topic, message)
       end
 
       @doc """
-      Broadcasts an event on the topic subscribed to by `subscriber`.
+      Broadcasts a message on the topic subscribed to by `subscriber`.
 
       `subscriber` must implement the `Mithril.PubSub.Subscriber` protocol.
 
       Raises `Phoenix.PubSub.BroadcastError` if broadcast fails.
       """
-      @spec broadcast!(Subscriber.t(), event) :: :ok | no_return
-      def broadcast!(subscriber, event) when is_map(subscriber) do
-        PubSub.broadcast!(__MODULE__, subscriber, event)
+      @spec broadcast!(Subscriber.t(), message) :: :ok | no_return
+      def broadcast!(subscriber, message) when is_map(subscriber) do
+        PubSub.broadcast!(__MODULE__, subscriber, message)
       end
 
       @doc """
-      Broadcasts event on a topic to all subscribers except the given `from` pid.
+      Broadcasts message on a topic to all subscribers except the given `from` pid.
       """
-      @spec broadcast_from(pid, topic, event) :: :ok | {:error, term}
-      def broadcast_from(from, topic, event) do
-        PubSub.broadcast_from(__MODULE__, from, topic, event)
+      @spec broadcast_from(pid, topic, message) :: :ok | {:error, term}
+      def broadcast_from(from, topic, message) do
+        PubSub.broadcast_from(__MODULE__, from, topic, message)
       end
 
       @doc """
-      Broadcasts event on the topic subscribed to by `subscriber` to all other
+      Broadcasts message on the topic subscribed to by `subscriber` to all other
       subscribers.
 
       `subscriber` must implement the `Mithril.PubSub.Subscriber` protocol.
       """
-      @spec broadcast_from(Subscriber.t(), event) :: :ok | {:error, term}
-      def broadcast_from(subscriber, event) do
-        PubSub.broadcast_from(__MODULE__, subscriber, event)
+      @spec broadcast_from(Subscriber.t(), message) :: :ok | {:error, term}
+      def broadcast_from(subscriber, message) do
+        PubSub.broadcast_from(__MODULE__, subscriber, message)
       end
 
       @doc """
-      Broadcasts event on a topic to all subscribers except the given `from` pid.
+      Broadcasts message on a topic to all subscribers except the given `from` pid.
 
       Raises `Phoenix.PubSub.BroadcastError` if broadcast fails.
       """
-      @spec broadcast_from!(pid, topic, event) :: :ok | no_return
-      def broadcast_from!(from, topic, event) do
-        PubSub.broadcast_from!(__MODULE__, from, topic, event)
+      @spec broadcast_from!(pid, topic, message) :: :ok | no_return
+      def broadcast_from!(from, topic, message) do
+        PubSub.broadcast_from!(__MODULE__, from, topic, message)
       end
 
       @doc """
-      Broadcasts event on the topic subscribed to by `subscriber` to all other
+      Broadcasts message on the topic subscribed to by `subscriber` to all other
       subscribers.
 
       `subscriber` must implement the `Mithril.PubSub.Subscriber` protocol.
 
       Raises `Phoenix.PubSub.BroadcastError` if broadcast fails.
       """
-      @spec broadcast_from!(Subscriber.t(), event) :: :ok | no_return
-      def broadcast_from!(subscriber, event) do
-        PubSub.broadcast_from!(__MODULE__, subscriber, event)
+      @spec broadcast_from!(Subscriber.t(), message) :: :ok | no_return
+      def broadcast_from!(subscriber, message) do
+        PubSub.broadcast_from!(__MODULE__, subscriber, message)
+      end
+
+      @doc """
+      Broadcasts message on given topic, to a single node.
+
+      See `Phoenix.PubSub.direct_broadcast/4`.
+      """
+      @spec direct_broadcast(Phoenix.PubSub.node_name(), topic | Subscriber.t(), message) ::
+              :ok | {:error, term}
+      def direct_broadcast(node_name, topic_or_subscriber, message) do
+        PubSub.direct_broadcast(node_name, __MODULE__, topic_or_subscriber, message)
+      end
+
+      @doc """
+      Broadcasts message on given topic, to a single node.
+
+      Raises `Phoenix.PubSub.BroadcastError` if broadcast fails.
+
+      See `Phoenix.PubSub.direct_broadcast!/4`.
+      """
+      @spec direct_broadcast!(Phoenix.PubSub.node_name(), topic | Subscriber.t(), message) ::
+              :ok | {:error, term}
+      def direct_broadcast!(node_name, topic_or_subscriber, message) do
+        PubSub.direct_broadcast!(node_name, __MODULE__, topic_or_subscriber, message)
+      end
+
+      @doc """
+      Broadcasts message to all but from_pid on given topic, to a single node.
+
+      See `Phoenix.PubSub.direct_broadcast_from/5`.
+      """
+      @spec direct_broadcast_from(Phoenix.PubSub.node_name(), pid, topic, message) ::
+              :ok | {:error, term}
+      def direct_broadcast_from(node_name, from_pid, topic, message) do
+        PubSub.direct_broadcast_from(node_name, __MODULE__, from_pid, topic, message)
+      end
+
+      @doc """
+      Broadcasts message to all but the current subscriber, to a single node.
+
+      See `direct_broadcast_from/4`.
+      """
+      @spec direct_broadcast_from(Phoenix.PubSub.node_name(), Subscriber.t(), message) ::
+              :ok | {:error, term}
+      def direct_broadcast_from(node_name, subscriber, message) do
+        PubSub.direct_broadcast_from(node_name, __MODULE__, subscriber, message)
+      end
+
+      @doc """
+      Broadcasts message to all but from_pid on given topic, to a single node.
+
+      Raises Phoenix.PubSub.BroadcastError if broadcast fails.
+
+      See `Phoenix.PubSub.direct_broadcast_from!/5`.
+      """
+      @spec direct_broadcast_from!(Phoenix.PubSub.node_name(), pid, topic, message) ::
+              :ok | {:error, term}
+      def direct_broadcast_from!(node_name, from_pid, topic, message) do
+        PubSub.direct_broadcast_from!(node_name, __MODULE__, from_pid, topic, message)
+      end
+
+      @doc """
+      Broadcasts message to all but the current subscriber, to a single node.
+
+      See `direct_broadcast_from!/4`
+      """
+      @spec direct_broadcast_from!(Phoenix.PubSub.node_name(), Subscriber.t(), message) ::
+              :ok | {:error, term}
+      def direct_broadcast_from!(node_name, subscriber, message) do
+        PubSub.direct_broadcast_from!(node_name, __MODULE__, subscriber, message)
       end
 
       @doc false
@@ -295,48 +365,94 @@ defmodule Mithril.PubSub do
   end
 
   @doc false
-  def broadcast(module, topic, event) when is_binary(topic) do
-    Phoenix.PubSub.broadcast(module, topic, event)
+  def broadcast(module, topic, message) when is_binary(topic) do
+    Phoenix.PubSub.broadcast(module, topic, message)
   end
 
   @doc false
-  def broadcast(module, subscriber, event) when is_map(subscriber) do
+  def broadcast(module, subscriber, message) when is_map(subscriber) do
     topic = Subscriber.topic(subscriber)
-    broadcast(module, topic, event)
+    broadcast(module, topic, message)
   end
 
   @doc false
-  def broadcast!(module, topic, event) when is_binary(topic) do
-    Phoenix.PubSub.broadcast!(module, topic, event)
+  def broadcast!(module, topic, message) when is_binary(topic) do
+    Phoenix.PubSub.broadcast!(module, topic, message)
   end
 
   @doc false
-  def broadcast!(module, subscriber, event) when is_map(subscriber) do
+  def broadcast!(module, subscriber, message) when is_map(subscriber) do
     topic = Subscriber.topic(subscriber)
-    broadcast!(module, topic, event)
+    broadcast!(module, topic, message)
   end
 
   @doc false
-  def broadcast_from(module, from, topic, event) when is_binary(topic) do
-    Phoenix.PubSub.broadcast_from(module, from, topic, event)
+  def broadcast_from(module, from, topic, message) when is_binary(topic) do
+    Phoenix.PubSub.broadcast_from(module, from, topic, message)
   end
 
   @doc false
-  def broadcast_from(module, subscriber, event) when is_map(subscriber) do
+  def broadcast_from(module, subscriber, message) when is_map(subscriber) do
     from = Subscriber.pid(subscriber)
     topic = Subscriber.topic(subscriber)
-    Phoenix.PubSub.broadcast_from(module, from, topic, event)
+    Phoenix.PubSub.broadcast_from(module, from, topic, message)
   end
 
   @doc false
-  def broadcast_from!(module, from, topic, event) when is_binary(topic) do
-    Phoenix.PubSub.broadcast_from!(module, from, topic, event)
+  def broadcast_from!(module, from, topic, message) when is_binary(topic) do
+    Phoenix.PubSub.broadcast_from!(module, from, topic, message)
   end
 
   @doc false
-  def broadcast_from!(module, subscriber, event) when is_map(subscriber) do
+  def broadcast_from!(module, subscriber, message) when is_map(subscriber) do
     from = Subscriber.pid(subscriber)
     topic = Subscriber.topic(subscriber)
-    Phoenix.PubSub.broadcast_from!(module, from, topic, event)
+    Phoenix.PubSub.broadcast_from!(module, from, topic, message)
+  end
+
+  @doc false
+  def direct_broadcast(node_name, module, topic, message) when is_binary(topic) do
+    Phoenix.PubSub.direct_broadcast(node_name, module, topic, message)
+  end
+
+  @doc false
+  def direct_broadcast(node_name, module, subscriber, message) when is_map(subscriber) do
+    topic = Subscriber.topic(subscriber)
+    direct_broadcast(node_name, module, topic, message)
+  end
+
+  @doc false
+  def direct_broadcast!(node_name, module, topic, message) when is_binary(topic) do
+    Phoenix.PubSub.direct_broadcast!(node_name, module, topic, message)
+  end
+
+  @doc false
+  def direct_broadcast!(node_name, module, subscriber, message) when is_map(subscriber) do
+    topic = Subscriber.topic(subscriber)
+    direct_broadcast!(node_name, module, topic, message)
+  end
+
+  @doc false
+  def direct_broadcast_from(node_name, module, from_pid, topic, message) when is_binary(topic) do
+    Phoenix.PubSub.direct_broadcast_from(node_name, module, from_pid, topic, message)
+  end
+
+  @doc false
+  def direct_broadcast_from(node_name, module, subscriber, message) when is_map(subscriber) do
+    from = Subscriber.pid(subscriber)
+    topic = Subscriber.topic(subscriber)
+    direct_broadcast_from(node_name, module, from, topic, message)
+  end
+
+  @doc false
+  def direct_broadcast_from!(node_name, module, from_pid, topic, message) when is_binary(topic) do
+    Phoenix.PubSub.direct_broadcast_from!(node_name, module, from_pid, topic, message)
+  end
+
+  @doc false
+  def direct_broadcast_from!(node_name, module, subscriber, message) when is_map(subscriber) do
+    from = Subscriber.pid(subscriber)
+    topic = Subscriber.topic(subscriber)
+    direct_broadcast_from!(node_name, module, from, topic, message)
   end
 end
