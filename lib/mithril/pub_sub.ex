@@ -79,8 +79,8 @@ defmodule Mithril.PubSub do
 
           import MyApp.PubSub,
             only: [
-              broadcast: 2
-              broadcast!: 2
+              broadcast: 2,
+              broadcast!: 2,
               broadcast_from: 2,
               broadcast_from!: 2
             ]
