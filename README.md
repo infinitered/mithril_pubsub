@@ -1,5 +1,7 @@
 # Mithril.PubSub
 
+[![Build Status](https://travis-ci.org/infinitered/mithril_pubsub.svg?branch=master)](https://travis-ci.org/infinitered/mithril_pubsub)
+
 PubSub and Presence implementations that don't create a dependency between your
 business logic and your Phoenix web app.
 
