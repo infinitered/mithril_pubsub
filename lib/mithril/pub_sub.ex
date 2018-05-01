@@ -28,7 +28,7 @@ defmodule Mithril.PubSub do
 
   ## Basic Usage
 
-  You can then use your new PubSub module subscribe and broadcast on 
+  You can then use your new PubSub module subscribe and broadcast on
   topics:
 
       # From a process that wants to receive messages
@@ -51,17 +51,17 @@ defmodule Mithril.PubSub do
 
   Phoenix will then use the given PubSub process for Phoenix Channels.
 
-  ### Phoenix Channels 
+  ### Phoenix Channels
 
   `Mithril.PubSub` expects messages on topics to be **ordinary Erlang terms**.
   This allows your business logic to use generic terms to describe messages
   and avoids any dependency on a specific library.
 
   However, while Phoenix Channels do broadcast over the the Endpoint's
-  configured PubSub server, they do so with specialized, Phoenix-specific 
+  configured PubSub server, they do so with specialized, Phoenix-specific
   messages like `Phoenix.Socket.Message` and `Phoenix.Socket.Broadcast`.
 
-  You should therefore update your `channel` definition in 
+  You should therefore update your `channel` definition in
   `lib/my_app_web.ex` to exclude the `Phoenix.Channel` functions and use
   your `PubSub` module's functions instead.
 
@@ -118,7 +118,7 @@ defmodule Mithril.PubSub do
         end
       end
 
-  This structure allows your logic application in `apps/my_app` or 
+  This structure allows your logic application in `apps/my_app` or
   `lib/my_app` to broadcast messages on topics with zero dependencies on
   Phoenix.
 
@@ -181,7 +181,7 @@ defmodule Mithril.PubSub do
       Broadcasts a message on a given topic, to all subscribers.
       """
       @spec broadcast(topic, message) :: :ok | {:error, term}
-      def broadcast(topic, message) do
+      def broadcast(topic, message) when is_binary(topic) do
         PubSub.broadcast(__MODULE__, topic, message)
       end
 
@@ -201,7 +201,7 @@ defmodule Mithril.PubSub do
       Raises `Phoenix.PubSub.BroadcastError` if broadcast fails.
       """
       @spec broadcast!(topic, message) :: :ok | no_return
-      def broadcast!(topic, message) do
+      def broadcast!(topic, message) when is_binary(topic) do
         PubSub.broadcast!(__MODULE__, topic, message)
       end
 
