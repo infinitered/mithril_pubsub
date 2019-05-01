@@ -38,7 +38,7 @@ defmodule Mithril.PubSub.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix_pubsub, "~> 1.0.0"},
+      {:phoenix_pubsub, "~> 1.1.0"},
       {:ex_doc, ">= 0.0.0", only: [:dev, :test]}
     ]
   end
