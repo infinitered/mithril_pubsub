@@ -5,6 +5,8 @@
 PubSub and Presence implementations that don't create a dependency between your
 business logic and your Phoenix web app.
 
+Originally built by [Infinite Red](https://infinite.red), a U.S.-based web and mobile development company.
+
 ## Why
 
 Phoenix 1.3 and higher encourages us to keep our business logic separate from our
